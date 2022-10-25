@@ -1,7 +1,7 @@
 import WalletConnectProvider from "@walletconnect/web3-provider";
 //import Torus from "@toruslabs/torus-embed"
 import WalletLink from "walletlink";
-import { Alert, Button, Col, Menu, Row, List } from "antd";
+import { Alert, Button, Col, Menu, Row, List, Divider } from "antd";
 import "antd/dist/antd.css";
 import React, { useCallback, useEffect, useState } from "react";
 import { BrowserRouter, Link, Route, Switch } from "react-router-dom";
@@ -252,6 +252,9 @@ function App(props) {
   );
   if (DEBUG) console.log("💵 stakerContractBalance", stakerContractBalance);
 
+  const rewardRatePerSecond = useContractReader(readContracts, "Staker", "REWARD_RATE_PER_SECOND");
+  console.log("💵 Reward Rate:", rewardRatePerSecond);
+
   // ** keep track of total 'threshold' needed of ETH
   const threshold = useContractReader(readContracts, "Staker", "threshold");
   console.log("💵 threshold:", threshold);
@@ -265,8 +268,11 @@ function App(props) {
   console.log("📟 stake events:", stakeEvents);
 
   // ** keep track of a variable from the contract in the local React state:
-  const timeLeft = useContractReader(readContracts, "Staker", "timeLeft");
-  console.log("⏳ timeLeft:", timeLeft);
+  const claimPeriodLeft = useContractReader(readContracts, "Staker", "claimPeriodLeft");
+  console.log("⏳ Claim Period Left:", claimPeriodLeft);
+
+  const depositTimeLeft = useContractReader(readContracts, "Staker", "depositTimeLeft");
+  console.log("⏳ Withdrawal Time Left:", depositTimeLeft);
 
   // ** Listen for when the contract has been 'completed'
   const complete = useContractReader(readContracts, "ExampleExternalContract", "completed");
@@ -515,11 +521,26 @@ function App(props) {
               <div>Staker Contract:</div>
               <Address value={readContracts && readContracts.Staker && readContracts.Staker.address} />
             </div>
+            <Divider />
 
-            <div style={{ padding: 8, marginTop: 32 }}>
-              <div>Timeleft:</div>
-              {timeLeft && humanizeDuration(timeLeft.toNumber() * 1000)}
+            <div style={{ padding: 8, marginTop: 16 }}>
+              <div>Reward Rate Per Second:</div>
+              <Balance balance={rewardRatePerSecond} fontSize={64} /> ETH
             </div>
+
+            <Divider />
+
+            <div style={{ padding: 8, marginTop: 16, fontWeight: "bold" }}>
+              <div>Claim Period Left:</div>
+              {claimPeriodLeft && humanizeDuration(claimPeriodLeft.toNumber() * 1000)}
+            </div>
+
+            <div style={{ padding: 8, marginTop: 16, fontWeight: "bold" }}>
+              <div>Deposit Period Left:</div>
+              {depositTimeLeft && humanizeDuration(depositTimeLeft.toNumber() * 1000)}
+            </div>
+
+            <Divider />
 
             <div style={{ padding: 8 }}>
               <div>Total staked:</div>
@@ -570,6 +591,8 @@ function App(props) {
                 and give you a form to interact with it locally
             */}
 
+            <Divider />
+
             <div style={{ width: 500, margin: "auto", marginTop: 64 }}>
               <div>Stake Events:</div>
               <List
@@ -577,13 +600,15 @@ function App(props) {
                 renderItem={item => {
                   return (
                     <List.Item key={item.blockNumber}>
-                      <Address value={item.args[0]} ensProvider={mainnetProvider} fontSize={16} /> =>
+                      <Address value={item.args[0]} ensProvider={mainnetProvider} fontSize={16} />
                       <Balance balance={item.args[1]} />
                     </List.Item>
                   );
                 }}
               />
             </div>
+
+            <Divider />
 
             {/* uncomment for a second contract:
             <Contract
