@@ -70,6 +70,12 @@ contract Staker {
         _;
     }
 
+    modifier isCompleted() {
+        bool completed = exampleExternalContract.completed();
+        require(completed, "Stake not completed!");
+        _;
+    }
+
     // Stake function for a user to stake ETH in our contract
 
     function stake() public payable depositDeadlineReached(false) {
@@ -93,7 +99,7 @@ contract Staker {
         uint256 individualBalance = balances[msg.sender];
 
         uint256 indBalanceRewards = individualBalance +
-            (2**((block.timestamp - depositTimestamps[msg.sender]) / 60) *
+            (2**((block.timestamp - depositTimestamps[msg.sender]) / 20) *
                 REWARD_RATE_PER_SECOND);
         balances[msg.sender] = 0;
 
@@ -114,8 +120,15 @@ contract Staker {
         exampleExternalContract.complete{value: address(this).balance}();
     }
 
+    function newRound() public claimDeadlineReached(true) isCompleted {
+        exampleExternalContract.redeposit();
+        killTime();
+    }
+
     function killTime() public {
         currentBlock = block.timestamp;
+        depositDeadline = currentBlock + 120 seconds;
+        claimDeadline = currentBlock + 250 seconds;
     }
 
     receive() external payable {

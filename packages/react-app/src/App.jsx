@@ -1,7 +1,7 @@
 import WalletConnectProvider from "@walletconnect/web3-provider";
 //import Torus from "@toruslabs/torus-embed"
 import WalletLink from "walletlink";
-import { Alert, Button, Col, Menu, Row, List, Divider } from "antd";
+import { Alert, Button, Col, Menu, Row, List, Divider, Input } from "antd";
 import "antd/dist/antd.css";
 import React, { useCallback, useEffect, useState } from "react";
 import { BrowserRouter, Link, Route, Switch } from "react-router-dom";
@@ -484,6 +484,8 @@ function App(props) {
     );
   }
 
+  const [stakeValue, setStakeValue] = useState("0.5");
+
   return (
     <div className="App">
       {/* ✏️ Edit the header and change the title to your project name */}
@@ -556,6 +558,17 @@ function App(props) {
               <Button
                 type={"default"}
                 onClick={() => {
+                  tx(writeContracts.Staker.newRound());
+                }}
+              >
+                📡 New Round!
+              </Button>
+            </div>
+
+            <div style={{ padding: 8 }}>
+              <Button
+                type={"default"}
+                onClick={() => {
                   tx(writeContracts.Staker.execute());
                 }}
               >
@@ -575,13 +588,30 @@ function App(props) {
             </div>
 
             <div style={{ padding: 8 }}>
+              <Input
+                id="stake amount" // name it something other than address for auto fill doxxing
+                name="stake amount" // name it something other than address for auto fill doxxing
+                autoComplete="off"
+                autoFocus={props.autoFocus}
+                placeholder={props.placeholder ? props.placeholder : "stake amount"}
+                value={stakeValue}
+                onChange={e => {
+                  setStakeValue(e.target.value);
+                }}
+              />
+            </div>
+            <div style={{ padding: 8 }}>
               <Button
                 type={balanceStaked ? "success" : "primary"}
                 onClick={() => {
-                  tx(writeContracts.Staker.stake({ value: ethers.utils.parseEther("0.5") }));
+                  tx(
+                    writeContracts.Staker.stake({
+                      value: ethers.utils.parseEther(stakeValue != 0 ? stakeValue : "0.5"),
+                    }),
+                  );
                 }}
               >
-                🥩 Stake 0.5 ether!
+                🥩 Stake {stakeValue != 0 ? stakeValue : 0.5} ether!
               </Button>
             </div>
 
